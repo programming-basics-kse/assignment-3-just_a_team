@@ -7,7 +7,7 @@ def parse_arguments():
     parser.add_argument('-medals', help='Country code or full name.')
     parser.add_argument('-year', type=int, help='Olympic year.')
     parser.add_argument('-total', type=int, help='Year to calculate total medals for.')
-    parser.add_argument('-interactive', help='Switches to an interactive mode showing statistics for the country.')
+    parser.add_argument('-interactive', type=bool, help='Switches to an interactive mode showing statistics for the country.')
     parser.add_argument('-overall', nargs='+', help='Displays for each of the entered countries the year in which it won the most medals and their number.')
     parser.add_argument('-output', help='Path to the output file.')
     return parser.parse_args()
@@ -27,6 +27,7 @@ if existArgs > 1:
 medals = []
 total_medals = {}
 overall_medals = {}
+interactive = {}
 
 with open(args.file, 'rt') as file:
     next(file)
@@ -57,7 +58,20 @@ with open(args.file, 'rt') as file:
                 total_medals[NOC] = {'Gold': 0, 'Silver': 0, 'Bronze': 0}
             total_medals[NOC][medal] += 1
 
-        if (args.overall or args.interactive) and medal != 'NA':
+        if args.interactive:
+            if NOC not in interactive:
+                interactive[NOC]= { }
+
+            medalCount = 1
+            if medal == 'NA':
+                medalCount = 0
+
+            if year not in interactive[NOC]:
+                interactive[NOC][year] = {'Medals': medalCount, 'City': city}
+            else:
+                interactive[NOC][year]['Medals'] += medalCount
+
+        if args.overall and medal != 'NA':
             if NOC not in overall_medals:
                 overall_medals[NOC]= { }
 
@@ -109,6 +123,41 @@ elif args.overall:
                 year = y
 
         lines.append(f'{searchId} - {year} - {maxMedals}')
+elif args.interactive:
+    while True:
+        countryId = input('Write country name: ')
+
+        if countryId not in interactive:
+            countryName = pycountry.countries.get(name=countryId)
+
+            if countryName:
+                countryId = countryName.alpha_3
+                if countryId not in interactive:
+                    print(f"Country {countryId } not found.")
+                    continue
+            else:
+                print(f"Country {countryId } not found.")
+                continue
+
+        firstYear = 2024
+        firstCity = ''
+        maxMedals = 0
+        minMedals = 10000
+
+        for y in interactive[countryId]:
+            if int(y) < firstYear:
+                firstCity = interactive[countryId][y]['City']
+                firstYear = int(y)
+
+        for y in interactive[countryId]:
+            if int(interactive[countryId][y]['Medals']) > maxMedals:
+                maxMedals = int(interactive[countryId][y]['Medals'])
+
+        for y in interactive[countryId]:
+            if int(interactive[countryId][y]['Medals']) < minMedals:
+                minMedals = int(interactive[countryId][y]['Medals'])
+
+        print(f'First: {firstYear} - {firstCity}. Max Medals: {maxMedals}, Min Medals: {minMedals}.')
 
 print('\n'.join(lines))
 
