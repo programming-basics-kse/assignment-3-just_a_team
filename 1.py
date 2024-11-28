@@ -7,20 +7,21 @@ def parse_arguments():
     parser.add_argument('-medals', help='Country code or full name.')
     parser.add_argument('-year', type=int, help='Olympic year.')
     parser.add_argument('-total', type=int, help='Year to calculate total medals for.')
+    parser.add_argument('-interactive', help='Switches to an interactive mode showing statistics for the country.')
     parser.add_argument('-overall', nargs='+', help='Displays for each of the entered countries the year in which it won the most medals and their number.')
     parser.add_argument('-output', help='Path to the output file.')
     return parser.parse_args()
 
 args = parse_arguments()
 
-specified_args = [args.total, args.medals, args.overall]
+specified_args = [args.total, args.medals, args.interactive, args.overall]
 existArgs = 0
 for a in specified_args:
     if a is not None:
         existArgs += 1
 
 if existArgs > 1:
-    print('You can use only one command (-total, -overall, -medals) at the same time.')
+    print('You can use only one command (-total, -interactive, -overall, -medals) at the same time.')
     exit()
 
 medals = []
@@ -56,7 +57,7 @@ with open(args.file, 'rt') as file:
                 total_medals[NOC] = {'Gold': 0, 'Silver': 0, 'Bronze': 0}
             total_medals[NOC][medal] += 1
 
-        if args.overall and medal != 'NA':
+        if (args.overall or args.interactive) and medal != 'NA':
             if NOC not in overall_medals:
                 overall_medals[NOC]= { }
 
