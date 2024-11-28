@@ -13,8 +13,15 @@ def parse_arguments():
 
 args = parse_arguments()
 
-if args.total and args.overall and args.medals:
+specified_args = [args.total, args.medals, args.overall]
+existAgrs = 0
+for a in specified_args:
+    if a is not None:
+        existAgrs += 1
+
+if existAgrs > 1:
     print('You can use only one command (-total, -overall, -medals) at the same time.')
+    exit()
 
 medals = []
 total_medals = {}
