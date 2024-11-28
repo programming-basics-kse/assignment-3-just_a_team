@@ -4,7 +4,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Analyze Olympic Games data.')
     parser.add_argument('file', help='Path to the input data file.')
     parser.add_argument('-medals', help='Country code or full name.')
-    parser.add_argument('year', type=int, help='Olympic year.')
+    parser.add_argument('-year', type=int, help='Olympic year.')
     parser.add_argument('-total', type=int, help='Year to calculate total medals for.')
     parser.add_argument('-output', help='Path to the output file.')
     return parser.parse_args()
@@ -16,8 +16,9 @@ if args.total and args.medals:
 
 medals = []
 total_medals = {}
+overall_medals = {}
 
-with open('Olympic Athletes - athlete_events.tsv', 'rt') as file:
+with open(args.file, 'rt') as file:
     next(file)
     for line in file:
         line = line[:-1]
@@ -49,12 +50,14 @@ with open('Olympic Athletes - athlete_events.tsv', 'rt') as file:
 lines = []
 
 if args.medals:
-    if medals:
+    if not args.year:
+        print("Year is required parameter!")
+    elif medals:
         lines.append(f'Medalists for {args.medals} in {args.year}:')
         for medal in medals[:10]:
             lines.append(f'{medal["Name"]} - {medal["Sport"]} - {medal["Medal"]}')
-    else:
-        lines.append(f'No medalists found for {args.medals} in {args.year}.')
+        else:
+            lines.append(f'No medalists found for {args.medals} in {args.year}.')
 
 elif args.total:
     lines.append(f'Medal count for the {args.total} Olympics:')
