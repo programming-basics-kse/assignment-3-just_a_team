@@ -1,4 +1,5 @@
 import argparse
+import pycountry
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Analyze Olympic Games data.')
@@ -6,13 +7,14 @@ def parse_arguments():
     parser.add_argument('-medals', help='Country code or full name.')
     parser.add_argument('-year', type=int, help='Olympic year.')
     parser.add_argument('-total', type=int, help='Year to calculate total medals for.')
+    parser.add_argument('-overall', nargs='+', help='Displays for each of the entered countries the year in which it won the most medals and their number.')
     parser.add_argument('-output', help='Path to the output file.')
     return parser.parse_args()
 
 args = parse_arguments()
 
-if args.total and args.medals:
-    print('You cannot use both -medals and -total at the same time.')
+if args.total and args.overall and args.medals:
+    print('You can use only one command (-total, -overall, -madals) at the same time.')
 
 medals = []
 total_medals = {}
@@ -47,6 +49,15 @@ with open(args.file, 'rt') as file:
                 total_medals[NOC] = {'Gold': 0, 'Silver': 0, 'Bronze': 0}
             total_medals[NOC][medal] += 1
 
+        if args.overall and medal != 'NA':
+            if NOC not in overall_medals:
+                overall_medals[NOC]= { }
+
+            if year not in overall_medals[NOC]:
+                overall_medals[NOC][year] = {'Medals': 1}
+            else:
+                overall_medals[NOC][year]['Medals'] += 1
+
 lines = []
 
 if args.medals:
@@ -63,6 +74,33 @@ elif args.total:
     lines.append(f'Medal count for the {args.total} Olympics:')
     for noc, counts in total_medals.items():
         lines.append(f'{noc} - Gold: {counts["Gold"]} - Silver: {counts["Silver"]} - Bronze: {counts["Bronze"]}')
+elif args.overall:
+    lines.append(f'The largest number of medals for the {args.overall} Olympics: ')
+
+    for c in args.overall:
+        searchId = c
+
+        if searchId not in overall_medals:
+            countryName = pycountry.countries.get(name=searchId)
+
+            if countryName:
+                searchId = countryName.alpha_3
+                if searchId not in overall_medals:
+                    lines.append(f"Country {searchId} not found.")
+                    continue
+            else:
+                lines.append(f"Country {searchId} not found.")
+                continue
+
+        maxMedals = 0
+        year = 0
+
+        for y in overall_medals[searchId]:
+            if int(overall_medals[searchId][y]['Medals']) > maxMedals:
+                maxMedals = int(overall_medals[searchId][y]['Medals'])
+                year = y
+
+        lines.append(f'{searchId} - {year} - {maxMedals}')
 
 print('\n'.join(lines))
 
