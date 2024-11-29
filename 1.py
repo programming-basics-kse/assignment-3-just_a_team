@@ -14,9 +14,9 @@ def parse_arguments():
 
 args = parse_arguments()
 
-specified_args = [args.total, args.medals, args.interactive, args.overall]
+specifiedArgs = [args.total, args.medals, args.interactive, args.overall]
 existArgs = 0
-for a in specified_args:
+for a in specifiedArgs:
     if a is not None:
         existArgs += 1
 
