@@ -32,7 +32,9 @@ with open(args.file, 'rt') as file:
     next(file)
     for line in file:
         line = line[:-1]
+        line = line.strip()
         split = line.split('\t')
+
         ID = split[0]
         name = split[1]
         sex = split[2]
@@ -48,23 +50,25 @@ with open(args.file, 'rt') as file:
         sport = split[12]
         event = split[13]
         medal = split[14]
+        countryName = pycountry.countries.get(name=team)
+        countryNameAlpha3 = countryName.alpha_3 if countryName else None
 
-        if args.medals and NOC == args.medals and int(year) == args.year and medal != 'NA':
+        if (team == args.medals or countryNameAlpha3 == args.medals) and int(year) == args.year and medal != 'NA':
             medals.append({'Name': name, 'Sport': sport, 'Medal': medal})
 
         if args.total and int(year) == args.total and medal != 'NA':
-            if NOC not in total_medals:
-                total_medals[NOC] = {'Gold': 0, 'Silver': 0, 'Bronze': 0}
-            total_medals[NOC][medal] += 1
+            if team not in total_medals:
+                total_medals[team] = {'Gold': 0, 'Silver': 0, 'Bronze': 0}
+            total_medals[team][medal] += 1
 
         if args.overall and medal != 'NA':
-            if NOC not in overall_medals:
-                overall_medals[NOC]= { }
+            if team not in overall_medals:
+                overall_medals[team]= { }
 
-            if year not in overall_medals[NOC]:
-                overall_medals[NOC][year] = {'Medals': 1}
+            if year not in overall_medals[team]:
+                overall_medals[team][year] = {'Medals': 1}
             else:
-                overall_medals[NOC][year]['Medals'] += 1
+                overall_medals[team][year]['Medals'] += 1
 
 lines = []
 
@@ -75,8 +79,8 @@ if args.medals:
         lines.append(f'Medalists for {args.medals} in {args.year}:')
         for medal in medals[:10]:
             lines.append(f'{medal["Name"]} - {medal["Sport"]} - {medal["Medal"]}')
-        else:
-            lines.append(f'No medalists found for {args.medals} in {args.year}.')
+    else:
+        lines.append(f'No medalists found for {args.medals} in {args.year}.')
 
 elif args.total:
     lines.append(f'Medal count for the {args.total} Olympics:')
@@ -106,6 +110,16 @@ elif args.overall:
         for y in overall_medals[searchId]:
             if int(overall_medals[searchId][y]['Medals']) > maxMedals:
                 maxMedals = int(overall_medals[searchId][y]['Medals'])
+                year = y
+
+        lines.append(f'{searchId} - {year} - {maxMedals}')
+
+print('\n'.join(lines))
+
+if args.output:
+    with open(args.output, 'w') as outfile:
+        outfile.write('\n'.join(lines))
+        print(f'You saved the data in {args.output}')
                 year = y
 
         lines.append(f'{searchId} - {year} - {maxMedals}')
